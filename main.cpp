@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <list>
+#include <memory>
 
 class Person{
 protected:
@@ -47,16 +48,6 @@ public:
 
 };
 
-std::istream& operator>>(std::istream& is, Person& p){
-    is>>p.id>>p.name;
-    return is;
-}
-
-std::ostream& operator<<(std::ostream& os, Person p){
-    os<<p.id<<" \t"<<p.name;
-    return os;
-}
-
 class Subscriber:public Person{
 protected:
     std::string phoneNumber;
@@ -90,18 +81,12 @@ public:
 
     // friend functions
     friend std::istream& operator>>(std::istream&, Subscriber&);
-    friend std::ostream& operator<<(std::ostream&, Subscriber);
+    friend std::ostream& operator<<(std::ostream&, Subscriber*);
+
+    virtual void print(std::ostream& os) const{
+        os<<id<<" \t"<<name<<" \t"<<phoneNumber;
+    }
 };
-
-std::istream& operator>>(std::istream& is, Subscriber& s){
-    is>>s.id>>s.name>>s.phoneNumber;
-    return is;
-}
-
-std::ostream& operator<<(std::ostream& os, Subscriber s){
-    os<<s.id<<" \t"<<s.name<<" \t"<<s.phoneNumber;
-    return os;
-}
 
 class SkypeSubscriber:public Subscriber{
 protected:
@@ -137,18 +122,12 @@ public:
 
     // friend functions
     friend std::istream& operator>>(std::istream&, SkypeSubscriber&);
-    friend std::ostream& operator<<(std::ostream&, SkypeSubscriber);
+    friend std::ostream& operator<<(std::ostream&, SkypeSubscriber*);
+
+    void print(std::ostream& os) const{
+        os<<id<<" \t"<<name<<" \t"<<phoneNumber<<" \t"<<skypeID;
+    }
 };
-
-std::istream& operator>>(std::istream& is, SkypeSubscriber& s){
-    is>>s.id>>s.name>>s.phoneNumber>>s.skypeID;
-    return is;
-}
-
-std::ostream& operator<<(std::ostream& os, SkypeSubscriber s){
-    os<<s.id<<" \t"<<s.name<<" \t"<<s.phoneNumber<<" \t"<<s.skypeID;
-    return os;
-}
 
 class SkypeSubscriber_Romania: public SkypeSubscriber{
 private:
@@ -183,18 +162,12 @@ public:
 
     // friend functions
     friend std::istream& operator>>(std::istream&, SkypeSubscriber_Romania&);
-    friend std::ostream& operator<<(std::ostream&, SkypeSubscriber_Romania);
+    friend std::ostream& operator<<(std::ostream&, SkypeSubscriber_Romania*);
+
+    void print(std::ostream& os) const{
+        os<<id<<" \t"<<name<<" \t"<<phoneNumber<<" \t"<<skypeID<<" \t"<<email;
+    }
 };
-
-std::istream& operator>>(std::istream& is, SkypeSubscriber_Romania& s){
-    is>>s.id>>s.name>>s.phoneNumber>>s.skypeID>>s.email;
-    return is;
-}
-
-std::ostream& operator<<(std::ostream& os, SkypeSubscriber_Romania s){
-    os<<s.id<<" \t"<<s.name<<" \t"<<s.phoneNumber<<" \t"<<s.skypeID<<" \t"<<s.email<<" \t";
-    return os;
-}
 
 class SkypeSubscriber_Extern: public SkypeSubscriber{
 private:
@@ -230,7 +203,81 @@ public:
     // friend functions
     friend std::istream& operator>>(std::istream&, SkypeSubscriber_Extern&);
     friend std::ostream& operator<<(std::ostream&, SkypeSubscriber_Extern);
+
+    void print(std::ostream& os) const{
+        os<<id<<" \t"<<name<<" \t"<<phoneNumber<<" \t"<<skypeID<<" \t"<<country;
+    }
 };
+
+class Agenda{
+private:
+    std::list<Subscriber*> contacts;
+public:
+
+    void addContact(Subscriber *s){
+        contacts.push_front(s);
+    }
+
+    Agenda(){
+        Subscriber* notFound = new Subscriber(-1, "NOT FOUND", "-1");
+        contacts.push_back(notFound);
+    }
+
+    ~Agenda(){
+
+    }
+
+    Subscriber* operator[](std::string search){
+
+        for(auto &it: contacts){
+            if(it->getName() == search){
+                return it;
+            }
+        }
+
+        return contacts.back();
+    }
+};
+
+std::istream& operator>>(std::istream& is, Person& p){
+    is>>p.id>>p.name;
+    return is;
+}
+
+std::ostream& operator<<(std::ostream& os, Person p){
+    os<<p.id<<" \t"<<p.name;
+    return os;
+}
+
+std::istream& operator>>(std::istream& is, Subscriber& s){
+    is>>s.id>>s.name>>s.phoneNumber;
+    return is;
+}
+
+std::ostream& operator<<(std::ostream& os, Subscriber *s){
+    s->print(os);
+    return os;
+}
+
+std::istream& operator>>(std::istream& is, SkypeSubscriber& s){
+    is>>s.id>>s.name>>s.phoneNumber>>s.skypeID;
+    return is;
+}
+
+std::ostream& operator<<(std::ostream& os, SkypeSubscriber* s){
+    s->print(os);
+    return os;
+}
+
+std::istream& operator>>(std::istream& is, SkypeSubscriber_Romania& s){
+    is>>s.id>>s.name>>s.phoneNumber>>s.skypeID>>s.email;
+    return is;
+}
+
+std::ostream& operator<<(std::ostream& os, SkypeSubscriber_Romania *s){
+    s->print(os);
+    return os;
+}
 
 std::istream& operator>>(std::istream& is, SkypeSubscriber_Extern& s){
     is>>s.id>>s.name>>s.phoneNumber>>s.skypeID>>s.country;
@@ -238,35 +285,19 @@ std::istream& operator>>(std::istream& is, SkypeSubscriber_Extern& s){
 }
 
 std::ostream& operator<<(std::ostream& os, SkypeSubscriber_Extern s){
-    os<<s.id<<" \t"<<s.name<<" \t"<<s.phoneNumber<<" \t"<<s.skypeID<<" \t"<<s.country<<" \t";
+    s.print(os);
     return os;
 }
 
-class Agenda{
-private:
-    std::list<Subscriber> contacts;
-public:
-    Agenda(){
-
-    }
-
-    ~Agenda(){
-
-    }
-
-    void addContact(Subscriber s){
-        contacts.push_back(s);
-    }
-
-    Subscriber& operator[](std::string search){
-        for(auto &it: contacts){
-            if(it.getName() == search){
-                return it;
-            }
-        }
-    }
-};
-
 int main(){
+    SkypeSubscriber_Romania r(1, "Ion", "0741", 100, "ion@example.com");
+    SkypeSubscriber_Extern e(2, "John", "3002", 200, "UK");
+
+    Agenda a;
+
+    a.addContact(&r);
+    a.addContact(&e);
+
+    std::cout<<a["Bob"]<<std::endl;
     return 0;
 }
